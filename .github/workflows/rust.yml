@@ -10,7 +10,7 @@ env:
   CARGO_TERM_COLOR: always
 
 jobs:
-  build-day1:
+  build-run:
     strategy:
       matrix:
         directory: [day1]
