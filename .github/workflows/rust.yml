@@ -1,16 +1,12 @@
 name: Rust
 
-on:
-  push:
-    branches: [ "main" ]
-  pull_request:
-    branches: [ "main" ]
+on: push
 
 env:
   CARGO_TERM_COLOR: always
 
 jobs:
-  build-day1:
+  build-run:
     strategy:
       matrix:
         directory: [day1]
@@ -26,3 +22,20 @@ jobs:
     - name: Run
       working-directory: ${{ matrix.directory }}
       run: cargo run --verbose
+
+  
+  release-please:
+    runs-on: ubuntu-latest
+    needs: build-run
+    environment: deploy
+    if: github.ref == 'refs/heads/main'
+    steps:
+      - uses: googleapis/release-please-action@v4
+        with:
+          # this assumes that you have created a personal access token
+          # (PAT) and configured it as a GitHub action secret named
+          # `MY_RELEASE_PLEASE_TOKEN` (this secret name is not important).
+          token: ${{ secrets.RELEASE_TOKEN }}
+          # this is a built-in strategy in release-please, see "Action Inputs"
+          # for more options
+          release-type: rust
