@@ -9,7 +9,7 @@ jobs:
   build-run:
     strategy:
       matrix:
-        directory: [day1]
+        directory: [day1,day2]
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v6
