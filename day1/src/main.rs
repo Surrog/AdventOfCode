@@ -10,13 +10,14 @@ fn parse_line(line: String) -> i32 {
     value
 }
 
-fn roll_value(current: i32, val: i32) -> i32 {
+fn roll_value(current: i32, val: i32) -> (i32, i32) {
     let mut result = current + val;
-    if result < 0 {
-        result = 100 + result;
+    let mut clicks = (result / 100).abs();
+    if current > 0 && result <= 0 {
+        clicks += 1;
     }
-    result %= 100;
-    result
+    result = result.rem_euclid(100);
+    (result, clicks)
 }
 
 #[cfg(test)]
@@ -35,26 +36,71 @@ mod tests {
     #[test]
     fn test_roll_value() {
         let mut cursor = 50;
-        cursor = roll_value(cursor, -68);
+        (cursor, _) = roll_value(cursor, -68);
         assert_eq!(cursor, 82);
-        cursor = roll_value(cursor, -30);
+
+        (cursor, _) = roll_value(cursor, -30);
         assert_eq!(cursor, 52);
-        cursor = roll_value(cursor, 48);
+
+        (cursor, _) = roll_value(cursor, 48);
         assert_eq!(cursor, 0);
-        cursor = roll_value(cursor, -5);
+
+        (cursor, _) = roll_value(cursor, -5);
         assert_eq!(cursor, 95);
-        cursor = roll_value(cursor, 60);
+
+        (cursor, _) = roll_value(cursor, 60);
         assert_eq!(cursor, 55);
-        cursor = roll_value(cursor, -55);
+
+        (cursor, _) = roll_value(cursor, -55);
         assert_eq!(cursor, 0);
-        cursor = roll_value(cursor, -1);
+
+        (cursor, _) = roll_value(cursor, -1);
         assert_eq!(cursor, 99);
-        cursor = roll_value(cursor, -99);
+
+        (cursor, _) = roll_value(cursor, -99);
         assert_eq!(cursor, 0);
-        cursor = roll_value(cursor, 14);
+
+        (cursor, _) = roll_value(cursor, 14);
         assert_eq!(cursor, 14);
-        cursor = roll_value(cursor, -82);
+
+        (cursor, _) = roll_value(cursor, -82);
         assert_eq!(cursor, 32);
+
+        (cursor, _) = roll_value(0, 100);
+        assert_eq!(cursor, 0);
+    }
+
+    #[test]
+    fn test_clicks() {
+        let mut cursor = 50;
+        let mut click;
+        (cursor, click) = roll_value(cursor, 50);
+        assert_eq!(cursor, 0);
+        assert_eq!(click, 1);
+        (cursor, click) = roll_value(cursor, 50);
+        assert_eq!(cursor, 50);
+        assert_eq!(click, 0);
+        (cursor, click) = roll_value(cursor, 50);
+        assert_eq!(cursor, 0);
+        assert_eq!(click, 1);
+        (cursor, click) = roll_value(cursor, 50);
+        assert_eq!(cursor, 50);
+        assert_eq!(click, 0);
+        (cursor, click) = roll_value(cursor, 100);
+        assert_eq!(cursor, 50);
+        assert_eq!(click, 1);
+        (cursor, click) = roll_value(cursor, -100);
+        assert_eq!(cursor, 50);
+        assert_eq!(click, 1);
+        (cursor, click) = roll_value(cursor, -50);
+        assert_eq!(cursor, 0);
+        assert_eq!(click, 1);
+        (cursor, click) = roll_value(50, -150);
+        assert_eq!(cursor, 0);
+        assert_eq!(click, 2);
+        (cursor, click) = roll_value(50, -250);
+        assert_eq!(cursor, 0);
+        assert_eq!(click, 3);
     }
 }
 
@@ -63,16 +109,12 @@ fn main() -> io::Result<()> {
         File::open(env::current_dir()?.join("src/input.txt")).expect("failed to read input.txt");
     let reader = BufReader::new(file);
 
-    let mut line_count = 0;
     let mut zero_counter = 0;
     let mut cursor = 50;
+    let mut clicks;
     for line in reader.lines() {
-        cursor = roll_value(cursor, parse_line(line?));
-
-        if cursor == 0 {
-            zero_counter += 1;
-        }
-        line_count += 1;
+        (cursor, clicks) = roll_value(cursor, parse_line(line?));
+        zero_counter += clicks;
     }
     println!("found counter: {zero_counter}");
 
