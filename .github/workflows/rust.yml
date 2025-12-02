@@ -10,11 +10,19 @@ env:
   CARGO_TERM_COLOR: always
 
 jobs:
-  build:
+  build-day1:
+    strategy:
+      matrix:
+        directory: [day1]
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v4
     - name: Build
+      working-directory: ${{ matrix.directory }}
       run: cargo build --verbose
     - name: Run tests
+      working-directory: ${{ matrix.directory }}
       run: cargo test --verbose
+    - name: Run
+      working-directory: ${{ matrix.directory }}
+      run: cargo run --verbose
