@@ -1,5 +1,17 @@
 # Changelog
 
+## [0.3.0](https://github.com/Surrog/AdventOfCode/compare/v0.2.0...v0.3.0) (2025-12-03)
+
+
+### Features
+
+* day3 :white_check_mark: ([915e2da](https://github.com/Surrog/AdventOfCode/commit/915e2da909b8844f411217249acc1278470e323a))
+
+
+### Bug Fixes
+
+* missing day3 in ci ([b778822](https://github.com/Surrog/AdventOfCode/commit/b778822146259a76c97d81bdee9f1c8f9765ec35))
+
 ## [0.2.0](https://github.com/Surrog/AdventOfCode/compare/v0.1.0...v0.2.0) (2025-12-02)
 
 
