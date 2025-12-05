@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.5.0](https://github.com/Surrog/AdventOfCode/compare/v0.4.0...v0.5.0) (2025-12-05)
+
+
+### Features
+
+* day5 :white_check_mark; ([bc91aea](https://github.com/Surrog/AdventOfCode/commit/bc91aeae7a9b90a906e312f2d5c0b03eaf924ad0))
+
 ## [0.4.0](https://github.com/Surrog/AdventOfCode/compare/v0.3.0...v0.4.0) (2025-12-04)
 
 
