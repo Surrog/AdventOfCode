@@ -222,7 +222,7 @@ fn main() -> io::Result<()> {
         if parsing_range {
             valid_range_ids.push(
                 RangeId::from_str(line.as_str())
-                    .expect(format!("failed to parse line {}", line).as_str()),
+                    .map_err(|err| io::Error::new(io::ErrorKind::InvalidData, err.badline))?,
             );
         } else {
             let id_to_check: u64 = line
