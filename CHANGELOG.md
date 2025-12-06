@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.5.1](https://github.com/Surrog/AdventOfCode/compare/v0.5.0...v0.5.1) (2025-12-06)
+
+
+### Bug Fixes
+
+* warning on day5 ([b364ef5](https://github.com/Surrog/AdventOfCode/commit/b364ef56b52937c03a2d5ea9c29c5a05ecc3edcc))
+
 ## [0.5.0](https://github.com/Surrog/AdventOfCode/compare/v0.4.0...v0.5.0) (2025-12-05)
 
 
