@@ -1,5 +1,5 @@
 use std::{
-    env, fs::File, io::{self, BufRead, BufReader}
+    collections::HashMap, env, fs::File, io::{self, BufRead, BufReader}
 };
 
 #[allow(dead_code)]
@@ -31,37 +31,63 @@ fn propagate_tachyon(mut matrix: Vec<Vec<u8>>) -> (i32, Vec<Vec<u8>>) {
     (split_count, matrix)
 }
 
-fn propagate_quantum_tachyon_timeline(matrix: &Vec<Vec<u8>>, timelines: &Vec<(usize, usize)>) -> Vec<(usize, usize)> {
-    let mut next_timeline =  Vec::new();
+
+fn propagate_quantum_tachyon_timeline(matrix: &Vec<Vec<u8>>, timelines: &HashMap<(usize, usize), usize>) -> HashMap<(usize, usize), usize> {
+    let mut next_timeline =  HashMap::new();
     next_timeline.reserve(timelines.len() * 2);
 
-    for cur_timeline in timelines {
-        if matrix[cur_timeline.0][cur_timeline.1] == b'.' {
-            let key = (cur_timeline.0 + 1, cur_timeline.1);
-            next_timeline.push(key);
-        }
+    for (cur_timeline, val) in timelines {
         if matrix[cur_timeline.0][cur_timeline.1] == b'^' {
             if cur_timeline.1 > 0 {
                 let key = (cur_timeline.0 + 1 ,cur_timeline.1 - 1);
-                next_timeline.push(key);
+                let new_val = next_timeline.get(&key).or(Some(&0)).unwrap()+val;
+                next_timeline.insert(key, new_val);
             }
             if cur_timeline.1 < matrix[cur_timeline.0].len() - 1 {
                 let key =(cur_timeline.0 + 1 ,cur_timeline.1 + 1);
-                next_timeline.push(key);
+                let new_val = next_timeline.get(&key).or(Some(&0)).unwrap()+val;
+                next_timeline.insert(key, new_val);
             }
+        } else {
+            let key = (cur_timeline.0 + 1, cur_timeline.1);
+            let new_val = next_timeline.get(&key).or(Some(&0)).unwrap()+val;
+            next_timeline.insert(key, new_val);
         }
     }
     next_timeline
 }
 
 fn propagate_quantum_tachyon(matrix: &Vec<Vec<u8>>, line: usize, col: usize) -> usize {
-    let mut timelines = Vec::from([(line, col)]);
+    let mut timelines: HashMap<(usize, usize), usize> = HashMap::from([((line, col), 1)]);
 
-    for line in line..matrix.len() {
-        println!("line: {line}/{}: timelines: {}", matrix.len(), timelines.len());
+    for _ in line..matrix.len() {
         timelines = propagate_quantum_tachyon_timeline(matrix, &timelines);
     }
-    return timelines.len();
+    
+    let mut result = 0;
+    for (_, count) in timelines {
+        result += count;
+    }
+
+    result
+}
+
+fn make_timeline_count(timelines: &Vec<(usize, usize)>) -> HashMap<(usize, usize), usize> {
+    let mut expected_timeline : HashMap<(usize, usize), usize> = HashMap::new();
+    for timeline in timelines {
+        let val =  expected_timeline.get(&timeline).or(Some(&0)).unwrap() + 1;
+        expected_timeline.insert(*timeline, val);
+    }
+    expected_timeline
+}
+
+fn print_line(timeline : HashMap<(usize, usize), usize>, len_size: usize) -> Vec<usize> {
+    let mut result = Vec::new();
+    result.resize(len_size, 0);
+    for (key, val) in timeline {
+        result[key.1] = val;
+    }
+    result
 }
 
 
@@ -91,6 +117,54 @@ fn test_propagate_tachyon() {
 
 #[test]
 fn test_propagate_quantum_tachyon() {
+        let matrix =[
+".......S.......".as_bytes().to_vec(),
+"...............".as_bytes().to_vec(),
+".......^.......".as_bytes().to_vec(),
+"...............".as_bytes().to_vec(),
+"......^.^......".as_bytes().to_vec(),
+"...............".as_bytes().to_vec()].to_vec();
+
+    let mut s_line = 0;
+    let mut s_col = 0;
+    for line in 0..matrix.len() {
+        for col in 0..matrix[0].len() {
+            if matrix[line][col] == b'S' {
+                s_line = line + 1;
+                s_col = col;
+            }
+        }
+    }
+
+    let timeline = propagate_quantum_tachyon(&matrix, s_line, s_col);
+    assert_eq!(timeline, 4);
+
+
+            let matrix =[
+".......S.......".as_bytes().to_vec(),
+"...............".as_bytes().to_vec(),
+".......^.......".as_bytes().to_vec(),
+"...............".as_bytes().to_vec(),
+"......^.^......".as_bytes().to_vec(),
+"...............".as_bytes().to_vec(),
+".....^.^.^.....".as_bytes().to_vec(),
+"...............".as_bytes().to_vec(),
+].to_vec();
+
+    let mut s_line = 0;
+    let mut s_col = 0;
+    for line in 0..matrix.len() {
+        for col in 0..matrix[0].len() {
+            if matrix[line][col] == b'S' {
+                s_line = line + 1;
+                s_col = col;
+            }
+        }
+    }
+
+    let timeline = propagate_quantum_tachyon(&matrix, s_line, s_col);
+    assert_eq!(timeline, 8);
+
     let matrix =[
 ".......S.......".as_bytes().to_vec(),
 "...............".as_bytes().to_vec(),
@@ -121,7 +195,7 @@ fn test_propagate_quantum_tachyon() {
     }
 
     let timeline = propagate_quantum_tachyon(&matrix, s_line, s_col);
-    assert_eq!(timeline, 40);
+    assert_eq!(40, timeline);
 }
 
 
