@@ -72,25 +72,6 @@ fn propagate_quantum_tachyon(matrix: &Vec<Vec<u8>>, line: usize, col: usize) -> 
     result
 }
 
-fn make_timeline_count(timelines: &Vec<(usize, usize)>) -> HashMap<(usize, usize), usize> {
-    let mut expected_timeline : HashMap<(usize, usize), usize> = HashMap::new();
-    for timeline in timelines {
-        let val =  expected_timeline.get(&timeline).or(Some(&0)).unwrap() + 1;
-        expected_timeline.insert(*timeline, val);
-    }
-    expected_timeline
-}
-
-fn print_line(timeline : HashMap<(usize, usize), usize>, len_size: usize) -> Vec<usize> {
-    let mut result = Vec::new();
-    result.resize(len_size, 0);
-    for (key, val) in timeline {
-        result[key.1] = val;
-    }
-    result
-}
-
-
 #[test]
 fn test_propagate_tachyon() {
     let matrix =[
