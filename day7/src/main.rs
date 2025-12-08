@@ -2,36 +2,6 @@ use std::{
     collections::HashMap, env, fs::File, io::{self, BufRead, BufReader}
 };
 
-#[allow(dead_code)]
-fn propagate_tachyon(mut matrix: Vec<Vec<u8>>) -> (i32, Vec<Vec<u8>>) {
-    let mut split_count = 0; 
-
-    for line in 1..matrix.len() {
-        for col in 0..matrix[line].len() {
-            if matrix[line-1][col] == b'S' || matrix[line-1][col] == b'|' {
-                if matrix[line][col] == b'.' {
-                    matrix[line][col] = b'|';
-                }
-            }
-        }
-        for col in 0..matrix[line].len() {
-            if matrix[line-1][col] == b'S' || matrix[line-1][col] == b'|' {
-                if matrix[line][col] == b'^' {
-                    split_count += 1;
-                    if col > 0 && matrix[line][col-1] == b'.' {
-                        matrix[line][col-1] = b'|';
-                    }
-                    if col < matrix[line].len() - 1 && matrix[line][col+1] == b'.' {
-                        matrix[line][col+1] = b'|';
-                    }
-                }
-            }
-        }
-    }
-    (split_count, matrix)
-}
-
-
 fn propagate_quantum_tachyon_timeline(matrix: &Vec<Vec<u8>>, timelines: &HashMap<(usize, usize), usize>) -> HashMap<(usize, usize), usize> {
     let mut next_timeline =  HashMap::new();
     next_timeline.reserve(timelines.len() * 2);
@@ -70,30 +40,6 @@ fn propagate_quantum_tachyon(matrix: &Vec<Vec<u8>>, line: usize, col: usize) -> 
     }
 
     result
-}
-
-#[test]
-fn test_propagate_tachyon() {
-    let matrix =[
-".......S.......".as_bytes().to_vec(),
-"...............".as_bytes().to_vec(),
-".......^.......".as_bytes().to_vec(),
-"...............".as_bytes().to_vec(),
-"......^.^......".as_bytes().to_vec(),
-"...............".as_bytes().to_vec(),
-".....^.^.^.....".as_bytes().to_vec(),
-"...............".as_bytes().to_vec(),
-"....^.^...^....".as_bytes().to_vec(),
-"...............".as_bytes().to_vec(),
-"...^.^...^.^...".as_bytes().to_vec(),
-"...............".as_bytes().to_vec(),
-"..^...^.....^..".as_bytes().to_vec(),
-"...............".as_bytes().to_vec(),
-".^.^.^.^.^...^.".as_bytes().to_vec(),
-"...............".as_bytes().to_vec()].to_vec();
-
-    let (split_count, _) = propagate_tachyon(matrix);
-    assert_eq!(split_count, 21);
 }
 
 #[test]
