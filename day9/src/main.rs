@@ -2,7 +2,8 @@ use std::{
     cmp::{max, min},
     env,
     fs::File,
-    io::{self, BufRead, BufReader},
+    i64,
+    io::{self, BufRead, BufReader}, vec,
 };
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -271,77 +272,146 @@ fn test_coord_direction() {
     assert_eq!(clock, PolygonClockwise::Anti);
 }
 
+fn fill_poly(mut mat: Vec<Vec<u8>>) -> Vec<Vec<u8>> {
+    for li in 0..mat.len() {
+        let mut start = 0;
+        let mut end = 0;
+
+        for i in 0..mat[li].len() {
+            if mat[li][i] == b'X' {
+                start = i;
+                break;
+            }
+        }
+
+        for i in 0..mat[li].len() {
+            if mat[li][mat[li].len() - i - 1] == b'X' {
+                end = mat[li].len() - i;
+                break;
+            }
+        }
+
+        for i in start..end {
+            mat[li][i] = b'X';
+        }
+    }
+
+    mat
+}
+
+fn print_mat(mat: &Vec<Vec<u8>>) {
+    for l in mat {
+        println!("{}", str::from_utf8(&l).unwrap());
+    }
+}
+
 fn best_rectangle_part2(vertices: &Vec<Position>) -> (Option<(&Position, &Position)>, i64) {
     let vertices_size = vertices.len();
     let mut best_pair = None;
     let mut best_size = 0;
 
-    let outside_dirs = get_bad_direction(vertices);
-
-    for l_idx in 0..vertices_size {
-        let current = &vertices[l_idx];
-        let second = &vertices[(l_idx + 1) % vertices_size];
-        let third = &vertices[(l_idx + 2) % vertices_size];
-        let fourth = Position {
-            x: current.x,
-            y: third.y,
-        };
-
-        let s = size(current, second);
-        if s > best_size {
-            best_size = s;
-            best_pair = Some((current, second));
-        }
-
-        let s = size(current, third);
-        if s <= best_size {
-            continue;
-        }
-
-        println!(
-            "considering {:?}, {:?}, {:?}, {:?}",
-            current, second, third, fourth
-        );
-
-        let mut bad_dirs = false;
-        let current_dir = direction(current, second);
-        let second_dir = direction(second, third);
-        for outdir in &outside_dirs {
-            if current_dir == outdir.0 && second_dir == outdir.1 {
-                bad_dirs = true;
-            }
-        }
-        if bad_dirs {
-            continue; // we are doing a rectange outise of the polygon
-        }
-
-        let mut rectangle_limit = (i64::MAX, 0, i64::MAX, 0);
-        for i in 0..3 {
-            rectangle_limit.0 = min(rectangle_limit.0, vertices[(l_idx + i) % vertices_size].x);
-            rectangle_limit.1 = max(rectangle_limit.1, vertices[(l_idx + i) % vertices_size].x);
-            rectangle_limit.2 = min(rectangle_limit.2, vertices[(l_idx + i) % vertices_size].y);
-            rectangle_limit.3 = max(rectangle_limit.3, vertices[(l_idx + i) % vertices_size].y);
-        }
-
-        let mut vectice_stricly_inside = false;
-        for pos in vertices {
-            if pos.x > rectangle_limit.0
-                && pos.x < rectangle_limit.1
-                && pos.y > rectangle_limit.2
-                && pos.y < rectangle_limit.3
-            {
-                vectice_stricly_inside = true;
-            }
-        }
-        if vectice_stricly_inside {
-            // polygon too concave to do this rectangle
-            continue;
-        }
-
-        best_size = s;
-        best_pair = Some((current, third));
+    let mut min_x = i64::MAX;
+    let mut min_y = i64::MAX;
+    let mut max_x = 0;
+    let mut max_y = 0;
+    for vert in vertices {
+        min_x = min(vert.x, min_x);
+        min_y = min(vert.y, min_y);
+        max_x = max(vert.x, max_x);
+        max_y = max(vert.y, max_y);
     }
+
+    println!("allocate_poly");
+    let mut mat = Vec::new();
+    let mat_len = (max_y - min_y + 1 + 1) as usize;
+    let line_len = (max_x - min_x + 1 + 1) as usize;
+    mat.reserve(mat_len);
+    for _ in 0..mat_len {
+        let mut line = Vec::new();
+        line.resize(line_len, b'.');
+        mat.push(line);
+    }
+
+    println!("draw_poly");
+    // fill matrix
+    for lidx in 0..vertices_size {
+        let x1 = (vertices[lidx].x - min_x) as usize;
+        let y1 = (vertices[lidx].y - min_y) as usize;
+        let x2 = (vertices[(lidx+1)%vertices_size].x - min_x) as usize;
+        let y2 = (vertices[(lidx+1)%vertices_size].y - min_y) as usize;
+
+        if x1 != x2 {
+            for x in min(x1, x2)..max(x1, x2) + 1 {
+                mat[y1][x] = b'X';                
+            } 
+        } else if y1 != y2 {
+            for y in min(y1, y2)..max(y1, y2) + 1 {
+                mat[y][x1] = b'X';                
+            } 
+        }
+    }
+
+    println!("fill_poly");
+    mat = fill_poly(mat);
+    // print_mat(&mat);
+
+    // try poly
+    println!("try polys");
+    for lidx in 0..vertices_size {
+        println!("{}/{}", lidx, vertices_size);
+
+        for ridx in (lidx+1)..vertices_size {
+            let s = size(&vertices[lidx], &vertices[ridx]);
+            if s < best_size {
+                continue;
+            }
+            let xs = (min(vertices[lidx].x, vertices[ridx].x));        
+            let xe = (max(vertices[lidx].x, vertices[ridx].x));        
+            let ys = (min(vertices[lidx].y, vertices[ridx].y));        
+            let ye = (max(vertices[lidx].y, vertices[ridx].y));
+
+            let inter = inner_intersect_polygon(&vertices, xs, xe, ys, ye);
+            if inter {
+                continue;
+            }
+
+            let xs = (xs - min_x) as usize ;        
+            let xe = (xe - min_x) as usize ;        
+            let ys = (ys - min_y) as usize ;        
+            let ye = (ye - min_y) as usize ;
+
+            let all_in_polygon = go_outsize(&mat, xs, xe, ys, ye);    
+            if all_in_polygon == false {
+                continue;
+            }
+            best_size = s;
+            best_pair = Some((&vertices[lidx], &vertices[ridx]));
+            println!("found rectangle {} -> {:?}", s, (vertices[lidx], vertices[ridx]));
+        }
+    }
+
+    // check far idx
     (best_pair, best_size)
+}
+
+fn go_outsize(mat: &Vec<Vec<u8>>, xs: usize, xe: usize, ys: usize, ye: usize) -> bool {
+    for y in ys..ye {
+        for x in xs..xe {
+            if mat[y][x] == b'.' {
+                return false;
+            }
+        }
+    }
+    true
+}
+
+fn  inner_intersect_polygon(vertices: &Vec<Position>, xs: i64, xe: i64, ys: i64, ye: i64) -> bool {
+    for ver in vertices{
+        if ver.x > xs && ver.x < xe && ver.y > ys && ver.y < ye {
+            return true;
+        }
+    }
+    false
 }
 
 #[test]
@@ -364,6 +434,40 @@ fn test_best_rectangle_part2() {
     println!("pos {:?}, {:?}", l, r);
 }
 
+fn print_polygon(vertices: &Vec<Position>, dezoom: i64) {
+    let mut min_x = i64::MAX;
+    let mut min_y = i64::MAX;
+    let mut max_x = 0;
+    let mut max_y = 0;
+    for vert in vertices {
+        min_x = min(vert.x, min_x);
+        min_y = min(vert.y, min_y);
+        max_x = max(vert.x, max_x);
+        max_y = max(vert.y, max_y);
+    }
+
+    let mut mat = Vec::new();
+    let mat_len = (((max_y - min_y) / dezoom) + 1) as usize;
+    let line_len = (((max_x - min_x) / dezoom) + 1) as usize;
+    mat.reserve(mat_len);
+    for _ in 0..mat_len {
+        let mut line = Vec::new();
+        line.resize(line_len, b'.');
+        mat.push(line);
+    }
+
+    for vert in vertices {
+        let x = ((vert.x - min_x) / dezoom) as usize;
+        let y = ((vert.y - min_y) / dezoom) as usize;
+
+        mat[y][x] = b'X';
+    }
+
+    for l in mat {
+        println!("{}", str::from_utf8(&l).unwrap());
+    }
+}
+
 fn main() -> io::Result<()> {
     let file = File::open(env::current_dir()?.join("src/input.txt"))?;
     let reader = BufReader::new(file);
@@ -374,6 +478,8 @@ fn main() -> io::Result<()> {
         let pos = parse_line(&l?)?;
         positions.push(pos);
     }
+
+    // print_polygon(&positions, 1000);
 
     let (best_pair, best_size) = best_rectangle_part2(&positions);
 
