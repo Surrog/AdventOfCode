@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.8.0](https://github.com/Surrog/AdventOfCode/compare/v0.7.0...v0.8.0) (2025-12-11)
+
+
+### Features
+
+* day9 ([d476dcd](https://github.com/Surrog/AdventOfCode/commit/d476dcdcb012213fe4c685689fca9817462a4fa9))
+
 ## [0.7.0](https://github.com/Surrog/AdventOfCode/compare/v0.6.0...v0.7.0) (2025-12-08)
 
 
