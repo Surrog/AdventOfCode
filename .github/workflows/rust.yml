@@ -19,10 +19,6 @@ jobs:
     - name: Run tests
       working-directory: ${{ matrix.directory }}
       run: cargo test --verbose
-    - name: Run
-      working-directory: ${{ matrix.directory }}
-      run: cargo run --verbose
-
   
   release-please:
     runs-on: ubuntu-latest
